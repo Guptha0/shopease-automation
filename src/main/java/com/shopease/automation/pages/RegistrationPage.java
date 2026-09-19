@@ -1,15 +1,21 @@
 package com.shopease.automation.pages;
 
+import com.shopease.automation.utils.WaitUtils;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 
+/**
+ * Page Object for the ShopEase Registration Page.
+ * Encapsulates all WebElements and user interactions required for the registration flow.
+ * Implements a Fluent interface design pattern for method chaining.
+ */
 public class RegistrationPage {
 
     private WebDriver driver;
 
-    // Form element locators
+    // --- Form Element Locators ---
     @FindBy(id = "fullName")
     private WebElement fullNameInput;
 
@@ -28,7 +34,7 @@ public class RegistrationPage {
     @FindBy(id = "registerBtn")
     private WebElement registerButton;
 
-    // Error and validation message locators
+    // --- Validation and Success Message Locators ---
     @FindBy(id = "fullNameError")
     private WebElement fullNameError;
 
@@ -45,7 +51,7 @@ public class RegistrationPage {
     private WebElement registrationSuccessMessage;
 
     /**
-     * Constructor to initialize PageFactory elements.
+     * Constructor to initialize WebDriver and PageFactory elements.
      * @param driver the WebDriver instance
      */
     public RegistrationPage(WebDriver driver) {
@@ -53,57 +59,67 @@ public class RegistrationPage {
         PageFactory.initElements(driver, this);
     }
 
-    // Action Methods
+    // --- Action Methods (with Explicit Waits) ---
 
-    public void enterFullName(String fullName) {
-        fullNameInput.clear();
-        fullNameInput.sendKeys(fullName);
+    public RegistrationPage enterFullName(String fullName) {
+        WebElement input = WaitUtils.waitForVisibility(fullNameInput);
+        input.clear();
+        input.sendKeys(fullName);
+        return this;
     }
 
-    public void enterEmail(String email) {
-        emailInput.clear();
-        emailInput.sendKeys(email);
+    public RegistrationPage enterEmail(String email) {
+        WebElement input = WaitUtils.waitForVisibility(emailInput);
+        input.clear();
+        input.sendKeys(email);
+        return this;
     }
 
-    public void enterPassword(String password) {
-        passwordInput.clear();
-        passwordInput.sendKeys(password);
+    public RegistrationPage enterPassword(String password) {
+        WebElement input = WaitUtils.waitForVisibility(passwordInput);
+        input.clear();
+        input.sendKeys(password);
+        return this;
     }
 
-    public void enterConfirmPassword(String confirmPassword) {
-        confirmPasswordInput.clear();
-        confirmPasswordInput.sendKeys(confirmPassword);
+    public RegistrationPage enterConfirmPassword(String confirmPassword) {
+        WebElement input = WaitUtils.waitForVisibility(confirmPasswordInput);
+        input.clear();
+        input.sendKeys(confirmPassword);
+        return this;
     }
 
-    public void clickTermsCheckbox() {
-        if (!termsCheckbox.isSelected()) {
-            termsCheckbox.click();
+    public RegistrationPage clickTermsCheckbox() {
+        WebElement checkbox = WaitUtils.waitForClickability(termsCheckbox);
+        if (!checkbox.isSelected()) {
+            checkbox.click();
         }
+        return this;
     }
 
     public void clickRegisterButton() {
-        registerButton.click();
+        WaitUtils.waitForClickability(registerButton).click();
     }
 
-    // Methods to retrieve validation/error messages
+    // --- Validation Message Retrieval Methods ---
 
     public String getFullNameErrorMessage() {
-        return fullNameError.getText();
+        return WaitUtils.waitForVisibility(fullNameError).getText().trim();
     }
 
     public String getEmailErrorMessage() {
-        return emailError.getText();
+        return WaitUtils.waitForVisibility(emailError).getText().trim();
     }
 
     public String getPasswordErrorMessage() {
-        return passwordError.getText();
+        return WaitUtils.waitForVisibility(passwordError).getText().trim();
     }
 
     public String getConfirmPasswordErrorMessage() {
-        return confirmPasswordError.getText();
+        return WaitUtils.waitForVisibility(confirmPasswordError).getText().trim();
     }
 
     public String getRegistrationSuccessMessage() {
-        return registrationSuccessMessage.getText();
+        return WaitUtils.waitForVisibility(registrationSuccessMessage).getText().trim();
     }
 }

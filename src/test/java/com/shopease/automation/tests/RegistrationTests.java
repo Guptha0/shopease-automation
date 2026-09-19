@@ -1,119 +1,92 @@
 package com.shopease.automation.tests;
 
+import com.shopease.automation.base.BaseTest;
 import com.shopease.automation.pages.RegistrationPage;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.chrome.ChromeDriver;
-import org.openqa.selenium.support.ui.ExpectedConditions;
-import org.openqa.selenium.support.ui.WebDriverWait;
 import org.testng.Assert;
-import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 
-import java.time.Duration;
+import java.util.UUID;
 
-public class RegistrationTests {
+/**
+ * Test class for validating user registration flows.
+ * Extends BaseTest to leverage central WebDriver initialization and teardown.
+ */
+public class RegistrationTests extends BaseTest {
 
-    private WebDriver driver;
-    private RegistrationPage registrationPage;
-    private WebDriverWait wait;
     private static final Logger logger = LogManager.getLogger(RegistrationTests.class);
+    private RegistrationPage registrationPage;
 
     @BeforeMethod
-    public void setUp() {
-        logger.info("Setting up WebDriver for test execution...");
+    public void setupTest() {
+        logger.info("Initializing RegistrationPage objects and navigating to Registration URL.");
         
-        // Initialize WebDriver (assuming chromedriver is in path or using a driver manager)
-        driver = new ChromeDriver();
-        driver.manage().window().maximize();
-        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(10));
+        // BaseTest exposes getDriver() and handles global setups like implicit waits and maximization
+        String registerUrl = "https://www.shopease.com/register"; // Can be moved to config.properties
+        getDriver().get(registerUrl);
         
-        // Initialize explicit wait
-        wait = new WebDriverWait(driver, Duration.ofSeconds(15));
-        
-        // Navigate to the ShopEase registration URL
-        // In a real project, this URL would typically come from a properties file
-        String registerUrl = "https://www.shopease.com/register"; 
-        driver.get(registerUrl);
-        logger.info("Navigated to Registration Page: " + registerUrl);
-        
-        registrationPage = new RegistrationPage(driver);
+        registrationPage = new RegistrationPage(getDriver());
     }
 
-    @Test
+    @Test(description = "Happy Path: Verify successful registration with valid, unique data")
     public void testSuccessfulRegistration() {
-        logger.info("Executing test: testSuccessfulRegistration");
+        logger.info("Starting test: testSuccessfulRegistration");
         
-        // Use a unique email to ensure the test can run repeatedly without collision
-        String uniqueEmail = "user_" + System.currentTimeMillis() + "@example.com";
+        // Generate a random unique email to prevent user-already-exists collisions
+        String uniqueEmail = "testuser_" + UUID.randomUUID().toString().substring(0, 8) + "@example.com";
+        logger.info("Generated unique email for test: " + uniqueEmail);
         
-        registrationPage.enterFullName("John Doe");
-        registrationPage.enterEmail(uniqueEmail);
-        registrationPage.enterPassword("SecurePass123!");
-        registrationPage.enterConfirmPassword("SecurePass123!");
-        registrationPage.clickTermsCheckbox();
-        
-        logger.info("Filled registration form. Submitting...");
-        registrationPage.clickRegisterButton();
+        // Utilizing fluent interface pattern implemented in RegistrationPage
+        registrationPage.enterFullName("John Architect")
+                        .enterEmail(uniqueEmail)
+                        .enterPassword("Str0ngP@ssw0rd!")
+                        .enterConfirmPassword("Str0ngP@ssw0rd!")
+                        .clickTermsCheckbox()
+                        .clickRegisterButton();
 
-        // Wait for the URL to change or for a success element to be visible
-        wait.until(ExpectedConditions.urlContains("dashboard")); // Example condition
+        // Validate success message (Implicitly handled by WaitUtils within the page object)
+        String successMsg = registrationPage.getRegistrationSuccessMessage();
+        logger.info("Registration success message captured: " + successMsg);
         
-        // Example validation for a successful registration message
-        // wait.until(ExpectedConditions.visibilityOf(registrationSuccessMessageElement));
-        // String successMsg = registrationPage.getRegistrationSuccessMessage();
-        // Assert.assertTrue(successMsg.contains("Registration successful"), "Success message is not correct.");
-        
-        logger.info("testSuccessfulRegistration completed successfully.");
+        Assert.assertTrue(successMsg.contains("Registration successful"), 
+            "The expected success message was not displayed upon valid registration.");
     }
 
-    @Test
-    public void testInvalidEmailValidation() {
-        logger.info("Executing test: testInvalidEmailValidation");
+    @Test(description = "Negative Scenario: Verify validation message for invalid email format")
+    public void testInvalidEmailFormat() {
+        logger.info("Starting test: testInvalidEmailFormat");
         
-        registrationPage.enterFullName("Jane Doe");
-        registrationPage.enterEmail("invalid-email-format");
-        registrationPage.enterPassword("SecurePass123!");
-        registrationPage.enterConfirmPassword("SecurePass123!");
-        registrationPage.clickTermsCheckbox();
-        registrationPage.clickRegisterButton();
+        registrationPage.enterFullName("Jane Doe")
+                        .enterEmail("invalid.email.com") // Invalid format: Missing '@'
+                        .enterPassword("SecurePass123!")
+                        .enterConfirmPassword("SecurePass123!")
+                        .clickTermsCheckbox()
+                        .clickRegisterButton();
 
-        // Validate the inline error message for the email field
         String emailErrorMsg = registrationPage.getEmailErrorMessage();
         logger.info("Captured email validation error: " + emailErrorMsg);
         
-        Assert.assertEquals(emailErrorMsg, "Please enter a valid email address.", "Incorrect email validation message displayed.");
-        
-        logger.info("testInvalidEmailValidation completed successfully.");
+        Assert.assertEquals(emailErrorMsg, "Please enter a valid email address.", 
+            "Email format validation failed or displayed incorrect message.");
     }
 
-    @Test
+    @Test(description = "Negative Scenario: Verify validation message when passwords do not match")
     public void testPasswordMismatch() {
-        logger.info("Executing test: testPasswordMismatch");
+        logger.info("Starting test: testPasswordMismatch");
         
-        registrationPage.enterFullName("Jack Doe");
-        registrationPage.enterEmail("jack.doe@example.com");
-        registrationPage.enterPassword("SecurePass123!");
-        registrationPage.enterConfirmPassword("MismatchPass456!");
-        registrationPage.clickTermsCheckbox();
-        registrationPage.clickRegisterButton();
+        registrationPage.enterFullName("Jack Architect")
+                        .enterEmail("jack.architect@example.com")
+                        .enterPassword("SecurePass123!")
+                        .enterConfirmPassword("DifferentPass456!") // Mismatched confirmation
+                        .clickTermsCheckbox()
+                        .clickRegisterButton();
 
-        // Validate the validation prompt for mismatched passwords
         String mismatchErrorMsg = registrationPage.getConfirmPasswordErrorMessage();
         logger.info("Captured password mismatch error: " + mismatchErrorMsg);
         
-        Assert.assertEquals(mismatchErrorMsg, "Passwords do not match.", "Incorrect password mismatch validation message displayed.");
-        
-        logger.info("testPasswordMismatch completed successfully.");
-    }
-
-    @AfterMethod
-    public void tearDown() {
-        if (driver != null) {
-            logger.info("Tearing down WebDriver...");
-            driver.quit();
-        }
+        Assert.assertEquals(mismatchErrorMsg, "Passwords do not match.", 
+            "Password mismatch validation failed or displayed incorrect message.");
     }
 }
