@@ -7,4 +7,9 @@
         </classes>
     </test>
     <!-- Add more <test> blocks here for parallel execution -->
+    <test name="Registration Tests">
+        <classes>
+            <class name="com.shopease.automation.tests.RegistrationTests"/>
+        </classes>
+    </test>
 </suite>
