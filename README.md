@@ -1,89 +1,49 @@
-# ShopEase E-Commerce Test Automation Framework
+# ShopEase Automation Framework
 
-This repository contains the Week 3 test automation framework for the ShopEase e-commerce platform. It transitions from basic procedural test scripts to a highly modular, maintainable, and extensible framework built with Java, Selenium WebDriver, TestNG, and Maven.
+This is a robust, production-grade Test Automation Framework built for an e-commerce platform using **Java, Selenium WebDriver, and TestNG**. It leverages the **Page Object Model (POM)** design pattern for maintainability and is fully integrated with a **Continuous Integration (CI/CD)** pipeline using GitHub Actions.
 
-## Framework Architecture & Layers
+## 🚀 Key Features
 
-The framework implements a multi-layered design prioritizing the separation of concerns:
+*   **Page Object Model (POM):** Clean separation between test logic and UI locators.
+*   **Parallel Execution:** Configured via `testng.xml` to execute test classes concurrently, heavily reducing total execution time.
+*   **Continuous Integration (CI/CD):** Automatically triggers headless testing on Linux runners upon every push to the `main` branch via GitHub Actions.
+*   **Cross-Browser & Headless Support:** Dynamically switches to `--headless=new` logic via a custom `DriverFactory` when executed in a CI environment.
+*   **Target Application:** Currently configured to test against `https://demowebshop.tricentis.com`, a stable and public e-commerce demo environment.
 
-- **Base Layer (`com.shopease.automation.base`)**: 
-  Contains `BaseTest.java`, which abstracts WebDriver setup and teardown. It uses `ThreadLocal` to ensure thread-safety for parallel test execution.
-- **Pages Layer (`com.shopease.automation.pages`)**: 
-  Implements the Page Object Model (POM) design pattern. UI elements and interactions are isolated into respective page classes, ensuring tests are highly readable and easy to maintain when UI changes occur.
-- **Tests Layer (`com.shopease.automation.tests`)**: 
-  Contains the TestNG test classes (e.g., `LoginTests.java`). These classes purely orchestrate the business flows utilizing the Page objects, entirely free of low-level element finding logic.
-- **Utils Layer (`com.shopease.automation.utils`)**: 
-  Contains reusable helpers such as `ConfigReader.java` (reading environment properties) and `ScreenshotUtil.java` (for capturing evidence on failure).
-- **Listeners Layer (`com.shopease.automation.listeners`)**: 
-  Houses the TestNG `ExtentReportListener.java` to automatically generate rich HTML execution reports and attach screenshots without polluting the test classes.
-- **Test Data & Config (`src/test/resources`)**: 
-  Externalized configurations (`config.properties`) and TestNG suite execution rules (`testng.xml`).
+## 📁 Project Architecture
 
-## Key Design Decisions
+```
+src/
+├── main/java/com/shopease/automation/
+│   ├── base/           # BaseTest configuration & WebDriver initialization
+│   ├── pages/          # Page Object classes (Login, Registration, Cart, etc.)
+│   └── utils/          # DriverFactory, ConfigReader, Screenshots
+└── test/
+    ├── java/com/shopease/automation/tests/ # TestNG Test Cases
+    └── resources/
+        ├── config.properties # Global variables (URL, credentials, browser)
+        └── testng.xml        # TestNG suite & parallel execution config
+```
 
-1. **Page Object Model (POM):** Prevents code duplication and enhances maintainability.
-2. **ThreadLocal WebDriver:** Facilitates robust parallel testing by assigning a separate WebDriver instance to each execution thread.
-3. **Listener Pattern:** Decouples reporting and screenshot capture logic from the test flows, making the code cleaner and strictly adhering to the Single Responsibility Principle.
+## 🛠️ How to Run Locally
 
-## Prerequisites
+You do not need Maven installed globally on your machine! This repository includes a Maven Wrapper (`mvnw`) for immediate cross-platform execution.
 
-- **Java Development Kit (JDK):** 17 or higher
-- **Maven:** 3.8+ for dependency management
-- **Browser:** Google Chrome (managed seamlessly by Selenium 4.6+ Manager)
+**1. Run tests normally (Browsers will open visibly):**
+```bash
+./mvnw clean test
+```
 
-## Setup and Execution
+**2. Run tests in Headless Mode (Browsers run invisibly in the background):**
+```bash
+./mvnw clean test -Dheadless=true
+```
 
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/Guptha0/shopease-automation.git
-   cd shopease-automation
-   ```
+## ☁️ Continuous Integration (GitHub Actions)
+This project contains a workflow file located at `.github/workflows/regression.yml`. 
+Whenever new code is pushed to this repository, GitHub automatically provisions an `ubuntu-latest` server, installs JDK 17, and executes the entire test suite in headless mode. You can view the real-time test execution results in the **Actions** tab of this repository.
 
-2. **Execute Tests via Maven Command Line:**
-   To run the entire suite as defined in the `testng.xml` file (parallel execution):
-   ```bash
-   mvn clean test
-   ```
-
-3. **View Reports:**
-   After execution, the Extent HTML Report will be generated at:
-   `reports/ExtentReport.html`
-
-## Continuous Integration (CI/CD)
-
-This project integrates with **GitHub Actions** to automate test execution on every `push` and `pull_request` to the `main` branch. This ensures that new changes do not break existing functionality.
-
-### How the CI Pipeline Operates
-
-1. **Trigger**: The pipeline is triggered automatically on pushes or pull requests to `main`.
-2. **Environment Setup**: It runs on an `ubuntu-latest` runner and sets up JDK 17 (Temurin distribution). Maven dependencies are cached to speed up subsequent runs.
-3. **Execution**: Tests are executed using the Maven command: `mvn clean test -Dbrowser=chrome -Dheadless=true`.
-4. **Artifact Archiving**: Regardless of test success or failure, execution reports (like Extent HTML reports) and screenshots are uploaded as build artifacts.
-
-### Headless Execution
-
-To ensure tests run smoothly in a server environment without a GUI, the `DriverFactory` has been configured to check for the `headless=true` system property or the `CI=true` environment variable. 
-When triggered, it injects the following ChromeOptions:
-- `--headless=new`: Uses the modern headless Chrome architecture.
-- `--disable-gpu`, `--no-sandbox`, `--disable-dev-shm-usage`: Standard stability arguments for Linux-based CI environments.
-- `--window-size=1920,1080`: Ensures responsive elements load correctly as they would on a standard desktop monitor.
-
-### Configuring GitHub Secrets (Optional)
-
-If your application under test requires sensitive information (like API keys or staging passwords), you can configure them in GitHub Secrets:
-1. Go to your repository settings on GitHub.
-2. Navigate to **Secrets and variables > Actions**.
-3. Add a **New repository secret** (e.g., `STAGING_PASSWORD`).
-4. Update the `.github/workflows/regression.yml` to pass these secrets as environment variables:
-   ```yaml
-   env:
-     STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
-   ```
-
-### Downloading Test Reports
-
-Post-build, you can download the detailed execution reports directly from GitHub Actions:
-1. Navigate to the **Actions** tab in your GitHub repository.
-2. Click on the latest workflow run.
-3. Scroll down to the **Artifacts** section at the bottom of the summary page.
-4. Download the `test-execution-reports` artifact to view the HTML reports and failure screenshots locally.
+## 📝 Test Scenarios Covered
+1.  **Authentication:** Validates secure login mechanisms and invalid credential handling.
+2.  **Registration:** Validates the flow for creating a new user account.
+3.  **Product Search & Cart:** Automates searching for an item, navigating to the Product Details Page (PDP), and adding the item to the shopping cart.
