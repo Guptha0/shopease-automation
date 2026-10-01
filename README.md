@@ -1,84 +1,89 @@
-# ShopEase Test Automation Framework 🚀
+# ShopEase E-Commerce Test Automation Framework
 
-A robust, modular, and highly scalable Test Automation Framework built for the **ShopEase** e-commerce application. 
+This repository contains the Week 3 test automation framework for the ShopEase e-commerce platform. It transitions from basic procedural test scripts to a highly modular, maintainable, and extensible framework built with Java, Selenium WebDriver, TestNG, and Maven.
 
-This framework is engineered using industry best practices to ensure maintainability, reliability, and fast feedback loops for continuous integration.
+## Framework Architecture & Layers
 
-## 🏗️ Architecture & Tech Stack
+The framework implements a multi-layered design prioritizing the separation of concerns:
 
-This project strictly adheres to the **Page Object Model (POM)** design pattern. By separating the web element locators and action methods from the test scripts, we achieve high reusability and significantly reduce maintenance overhead when UI changes occur.
+- **Base Layer (`com.shopease.automation.base`)**: 
+  Contains `BaseTest.java`, which abstracts WebDriver setup and teardown. It uses `ThreadLocal` to ensure thread-safety for parallel test execution.
+- **Pages Layer (`com.shopease.automation.pages`)**: 
+  Implements the Page Object Model (POM) design pattern. UI elements and interactions are isolated into respective page classes, ensuring tests are highly readable and easy to maintain when UI changes occur.
+- **Tests Layer (`com.shopease.automation.tests`)**: 
+  Contains the TestNG test classes (e.g., `LoginTests.java`). These classes purely orchestrate the business flows utilizing the Page objects, entirely free of low-level element finding logic.
+- **Utils Layer (`com.shopease.automation.utils`)**: 
+  Contains reusable helpers such as `ConfigReader.java` (reading environment properties) and `ScreenshotUtil.java` (for capturing evidence on failure).
+- **Listeners Layer (`com.shopease.automation.listeners`)**: 
+  Houses the TestNG `ExtentReportListener.java` to automatically generate rich HTML execution reports and attach screenshots without polluting the test classes.
+- **Test Data & Config (`src/test/resources`)**: 
+  Externalized configurations (`config.properties`) and TestNG suite execution rules (`testng.xml`).
 
-*   **Language:** Java 17
-*   **Core Engine:** Selenium WebDriver (v4.x)
-*   **Test Runner:** TestNG
-*   **Build Tool:** Apache Maven
-*   **Design Pattern:** Page Object Model (POM) & Fluent API
-*   **Reporting:** ExtentReports
-*   **Logging:** Log4j2
-*   **Data Handling:** Apache POI (Excel Data-Driven)
+## Key Design Decisions
 
-### Directory Structure Layering
+1. **Page Object Model (POM):** Prevents code duplication and enhances maintainability.
+2. **ThreadLocal WebDriver:** Facilitates robust parallel testing by assigning a separate WebDriver instance to each execution thread.
+3. **Listener Pattern:** Decouples reporting and screenshot capture logic from the test flows, making the code cleaner and strictly adhering to the Single Responsibility Principle.
 
-*   📂 `src/main/java/.../base/`: Contains `BaseTest.java` for ThreadLocal WebDriver initialization, global configurations, and teardown logic (e.g., screenshot capture on failure).
-*   📂 `src/main/java/.../pages/`: Contains Page Object classes (`RegistrationPage.java`, etc.). Each class encapsulates the WebElements (`@FindBy`) and actions for a specific UI page. Methods return `this` where applicable to support method chaining (Fluent interface).
-*   📂 `src/main/java/.../utils/`: Contains utility classes like `WaitUtils.java` to handle explicit waits efficiently and prevent flaky tests.
-*   📂 `src/test/java/.../tests/`: Contains the actual TestNG test classes (e.g., `RegistrationTests.java`).
-*   📂 `src/test/resources/`: Contains configuration properties and `testng.xml` for suite execution.
+## Prerequisites
 
----
+- **Java Development Kit (JDK):** 17 or higher
+- **Maven:** 3.8+ for dependency management
+- **Browser:** Google Chrome (managed seamlessly by Selenium 4.6+ Manager)
 
-## 🛠️ Prerequisites
+## Setup and Execution
 
-Before you begin, ensure you have the following installed on your local machine:
+1. **Clone the repository:**
+   ```bash
+   git clone https://github.com/Guptha0/shopease-automation.git
+   cd shopease-automation
+   ```
 
-1.  **Java Development Kit (JDK) 17**: Ensure `JAVA_HOME` is configured in your system environment variables.
-2.  **Apache Maven**: Installed and added to your system `PATH`.
-3.  **IDE**: IntelliJ IDEA, Eclipse, or VS Code (with Java Extension Pack).
-4.  **Browsers**: Google Chrome, Mozilla Firefox, or Microsoft Edge installed on the testing machine. *(Note: Selenium v4.6+ automatically manages browser drivers using Selenium Manager).*
+2. **Execute Tests via Maven Command Line:**
+   To run the entire suite as defined in the `testng.xml` file (parallel execution):
+   ```bash
+   mvn clean test
+   ```
 
----
+3. **View Reports:**
+   After execution, the Extent HTML Report will be generated at:
+   `reports/ExtentReport.html`
 
-## 🚀 Setup Instructions
+## Continuous Integration (CI/CD)
 
-1.  **Navigate to the project root:**
-    Ensure your terminal is inside the directory containing the `pom.xml` file.
-    ```bash
-    cd shopease
-    ```
+This project integrates with **GitHub Actions** to automate test execution on every `push` and `pull_request` to the `main` branch. This ensures that new changes do not break existing functionality.
 
-2.  **Download Dependencies:**
-    Run the following Maven command to download all required libraries defined in the `pom.xml`:
-    ```bash
-    mvn clean install -DskipTests
-    ```
+### How the CI Pipeline Operates
 
-3.  **Configure Environment (Optional):**
-    If your framework uses a configuration file, verify `src/test/resources/config.properties` has the correct test URL and preferred browser configuration.
+1. **Trigger**: The pipeline is triggered automatically on pushes or pull requests to `main`.
+2. **Environment Setup**: It runs on an `ubuntu-latest` runner and sets up JDK 17 (Temurin distribution). Maven dependencies are cached to speed up subsequent runs.
+3. **Execution**: Tests are executed using the Maven command: `mvn clean test -Dbrowser=chrome -Dheadless=true`.
+4. **Artifact Archiving**: Regardless of test success or failure, execution reports (like Extent HTML reports) and screenshots are uploaded as build artifacts.
 
----
+### Headless Execution
 
-## 💻 Execution Instructions
+To ensure tests run smoothly in a server environment without a GUI, the `DriverFactory` has been configured to check for the `headless=true` system property or the `CI=true` environment variable. 
+When triggered, it injects the following ChromeOptions:
+- `--headless=new`: Uses the modern headless Chrome architecture.
+- `--disable-gpu`, `--no-sandbox`, `--disable-dev-shm-usage`: Standard stability arguments for Linux-based CI environments.
+- `--window-size=1920,1080`: Ensures responsive elements load correctly as they would on a standard desktop monitor.
 
-You can execute the test suite using either Maven from the command line or directly through your IDE.
+### Configuring GitHub Secrets (Optional)
 
-### 1. Execute via Maven (Recommended for CI/CD)
+If your application under test requires sensitive information (like API keys or staging passwords), you can configure them in GitHub Secrets:
+1. Go to your repository settings on GitHub.
+2. Navigate to **Secrets and variables > Actions**.
+3. Add a **New repository secret** (e.g., `STAGING_PASSWORD`).
+4. Update the `.github/workflows/regression.yml` to pass these secrets as environment variables:
+   ```yaml
+   env:
+     STAGING_PASSWORD: ${{ secrets.STAGING_PASSWORD }}
+   ```
 
-To run the entire suite defined in `testng.xml`, use the Maven Surefire plugin:
+### Downloading Test Reports
 
-```bash
-mvn clean test
-```
-
-### 2. Execute via IDE / TestNG
-
-1.  Open `src/test/resources/testng.xml` in your IDE.
-2.  Right-click anywhere inside the file and select **Run 'testng.xml'**.
-3.  Alternatively, you can run individual test classes (like `RegistrationTests.java`) by clicking the **Run** button next to the class or method signature in your IDE.
-
----
-
-## ⚡ Parallel Execution & Reliability
-
-*   **Parallelism:** The framework is configured for parallel test execution. You can modify this behavior in `src/test/resources/testng.xml` by adjusting the `parallel="tests"` and `thread-count="4"` attributes.
-*   **Explicit Waits:** Hardcoded `Thread.sleep()` calls are strictly avoided. The framework utilizes `WaitUtils` (WebDriverWait) to dynamically wait for element visibility and clickability, ensuring fast and flake-free execution.
-*   **Screenshot on Failure:** The `BaseTest.java` class includes an `@AfterMethod` hook. If a TestNG test fails, a screenshot is automatically captured and saved to the `screenshots/` directory for easier debugging.
+Post-build, you can download the detailed execution reports directly from GitHub Actions:
+1. Navigate to the **Actions** tab in your GitHub repository.
+2. Click on the latest workflow run.
+3. Scroll down to the **Artifacts** section at the bottom of the summary page.
+4. Download the `test-execution-reports` artifact to view the HTML reports and failure screenshots locally.

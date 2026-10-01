@@ -1,7 +1,7 @@
 package com.shopease.automation.base;
 
-import org.openqa.selenium.OutputType;
-import org.openqa.selenium.TakesScreenshot;
+import com.shopease.automation.utils.ConfigReader;
+import com.shopease.automation.utils.ScreenshotUtil;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.edge.EdgeDriver;
@@ -10,26 +10,19 @@ import org.testng.ITestResult;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.Duration;
-import java.util.Properties;
 
 public class BaseTest {
 
-    private static final ThreadLocal<WebDriver> driver = new ThreadLocal<>();
-    protected Properties config;
+    // ThreadLocal ensures thread-safe WebDriver execution for parallel testing
+    protected static ThreadLocal<WebDriver> driver = new ThreadLocal<>();
 
-    @BeforeMethod
+    @BeforeMethod(alwaysRun = true)
     public void setUp() {
-        loadConfig();
-        String browser = config.getProperty("browser", "chrome").toLowerCase();
-        
+        String browser = ConfigReader.getProperty("browser", "chrome");
+
         WebDriver webDriver;
-        switch (browser) {
+        switch (browser.toLowerCase()) {
             case "firefox":
                 webDriver = new FirefoxDriver();
                 break;
@@ -42,55 +35,30 @@ public class BaseTest {
                 break;
         }
 
+        webDriver.manage().window().maximize();
+        
+        long implicitWait = Long.parseLong(ConfigReader.getProperty("implicit.wait", "10"));
+        webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
+        
+        webDriver.get(ConfigReader.getProperty("app.url"));
+        
         driver.set(webDriver);
-        
-        int implicitWait = Integer.parseInt(config.getProperty("timeout.implicit", "10"));
-        int pageLoadWait = Integer.parseInt(config.getProperty("timeout.pageLoad", "30"));
-        
-        getDriver().manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
-        getDriver().manage().timeouts().pageLoadTimeout(Duration.ofSeconds(pageLoadWait));
-        getDriver().manage().window().maximize();
-        
-        getDriver().get(config.getProperty("base.url"));
-    }
-
-    @AfterMethod
-    public void tearDown(ITestResult result) {
-        if (ITestResult.FAILURE == result.getStatus()) {
-            takeScreenshot(result.getName());
-        }
-        
-        if (getDriver() != null) {
-            getDriver().quit();
-            driver.remove();
-        }
     }
 
     public static WebDriver getDriver() {
         return driver.get();
     }
 
-    private void loadConfig() {
-        config = new Properties();
-        try (FileInputStream fis = new FileInputStream("src/test/resources/config.properties")) {
-            config.load(fis);
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException("Could not load config.properties");
+    @AfterMethod(alwaysRun = true)
+    public void tearDown(ITestResult result) {
+        // Automatically capture screenshot on failure
+        if (ITestResult.FAILURE == result.getStatus()) {
+            ScreenshotUtil.takeScreenshot(getDriver(), result.getName());
         }
-    }
-
-    private void takeScreenshot(String testName) {
+        
         if (getDriver() != null) {
-            File src = ((TakesScreenshot) getDriver()).getScreenshotAs(OutputType.FILE);
-            File dest = new File("screenshots/" + testName + "_" + System.currentTimeMillis() + ".png");
-            try {
-                dest.getParentFile().mkdirs();
-                Files.copy(src.toPath(), dest.toPath(), StandardCopyOption.REPLACE_EXISTING);
-                System.out.println("Screenshot saved at: " + dest.getAbsolutePath());
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
+            getDriver().quit();
+            driver.remove();
         }
     }
 }

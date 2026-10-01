@@ -1,15 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE suite SYSTEM "https://testng.org/testng-1.0.dtd">
-<suite name="ShopEase Automation Suite" parallel="tests" thread-count="4">
+<suite name="ShopEase Automation Suite" parallel="tests" thread-count="3">
+    
+    <listeners>
+        <listener class-name="com.shopease.automation.listeners.ExtentReportListener" />
+    </listeners>
+
     <test name="Login Tests">
         <classes>
-            <class name="com.shopease.automation.tests.LoginTests"/>
+            <class name="com.shopease.automation.tests.LoginTests" />
         </classes>
     </test>
-    <!-- Add more <test> blocks here for parallel execution -->
+
     <test name="Registration Tests">
         <classes>
-            <class name="com.shopease.automation.tests.RegistrationTests"/>
+            <class name="com.shopease.automation.tests.RegistrationTests" />
         </classes>
     </test>
+
+    <test name="Product Cart Flow Tests">
+        <classes>
+            <class name="com.shopease.automation.tests.ProductSearchCartTests" />
+        </classes>
+    </test>
+
 </suite>

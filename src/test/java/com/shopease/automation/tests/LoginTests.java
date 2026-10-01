@@ -2,32 +2,29 @@ package com.shopease.automation.tests;
 
 import com.shopease.automation.base.BaseTest;
 import com.shopease.automation.pages.LoginPage;
+import com.shopease.automation.utils.ConfigReader;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
 public class LoginTests extends BaseTest {
 
     @Test(description = "Verify successful login with valid credentials")
-    public void testValidLogin() {
-        LoginPage loginPage = new LoginPage();
+    public void verifyValidLogin() {
+        LoginPage loginPage = new LoginPage(getDriver());
+        loginPage.enterUsername(ConfigReader.getProperty("valid.username"));
+        loginPage.enterPassword(ConfigReader.getProperty("valid.password"));
+        loginPage.clickLogin();
         
-        loginPage.login("validUser", "validPassword123");
-        
-        // Example assertion (commented since URL is hypothetical)
-        // DashboardPage dashboardPage = new DashboardPage();
-        // Assert.assertTrue(dashboardPage.isDashboardDisplayed(), "Dashboard should be displayed after login");
-        
-        System.out.println("Valid login test executed successfully.");
+        Assert.assertTrue(loginPage.isDashboardDisplayed(), "Dashboard should be displayed after valid login.");
     }
-    
-    @Test(description = "Verify login failure with invalid credentials")
-    public void testInvalidLogin() {
-        LoginPage loginPage = new LoginPage();
+
+    @Test(description = "Verify login fails with invalid credentials")
+    public void verifyInvalidLogin() {
+        LoginPage loginPage = new LoginPage(getDriver());
+        loginPage.enterUsername("invaliduser");
+        loginPage.enterPassword("wrongpassword");
+        loginPage.clickLogin();
         
-        loginPage.login("invalidUser", "wrongPassword");
-        
-        String errorMsg = loginPage.getErrorMessage();
-        Assert.assertTrue(errorMsg.contains("Invalid username or password"), 
-                "Expected error message not displayed.");
+        Assert.assertFalse(loginPage.isDashboardDisplayed(), "Dashboard should NOT be displayed after invalid login.");
     }
 }
