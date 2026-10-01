@@ -20,33 +20,19 @@ public class BaseTest {
     @BeforeMethod(alwaysRun = true)
     public void setUp() {
         String browser = ConfigReader.getProperty("browser", "chrome");
-
-        WebDriver webDriver;
-        switch (browser.toLowerCase()) {
-            case "firefox":
-                webDriver = new FirefoxDriver();
-                break;
-            case "edge":
-                webDriver = new EdgeDriver();
-                break;
-            case "chrome":
-            default:
-                webDriver = new ChromeDriver();
-                break;
-        }
-
-        webDriver.manage().window().maximize();
         
-        long implicitWait = Long.parseLong(ConfigReader.getProperty("implicit.wait", "10"));
-        webDriver.manage().timeouts().implicitlyWait(Duration.ofSeconds(implicitWait));
+        // Use the DriverFactory to get the driver (this applies the headless logic!)
+        WebDriver webDriver = com.shopease.automation.utils.DriverFactory.initDriver(browser);
         
         webDriver.get(ConfigReader.getProperty("app.url"));
         
+        // The DriverFactory already manages ThreadLocal, but since BaseTest has its own,
+        // we update it here just to be safe with existing references.
         driver.set(webDriver);
     }
 
     public static WebDriver getDriver() {
-        return driver.get();
+        return com.shopease.automation.utils.DriverFactory.getDriver();
     }
 
     @AfterMethod(alwaysRun = true)
@@ -56,9 +42,7 @@ public class BaseTest {
             ScreenshotUtil.takeScreenshot(getDriver(), result.getName());
         }
         
-        if (getDriver() != null) {
-            getDriver().quit();
-            driver.remove();
-        }
+        com.shopease.automation.utils.DriverFactory.quitDriver();
+        driver.remove();
     }
 }

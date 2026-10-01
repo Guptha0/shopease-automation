@@ -6,9 +6,10 @@ import org.openqa.selenium.WebDriver;
 public class HomePage {
     private WebDriver driver;
     
+    // Locators for demowebshop.tricentis.com
     private By searchBox = By.name("q");
-    private By searchBtn = By.id("search-btn");
-    private By cartIcon = By.id("cart-icon");
+    private By searchBtn = By.cssSelector("input.search-box-button");
+    private By cartIcon = By.cssSelector("li#topcartlink a.ico-cart");
 
     public HomePage(WebDriver driver) {
         this.driver = driver;

@@ -6,8 +6,9 @@ import org.openqa.selenium.WebDriver;
 public class ProductPage {
     private WebDriver driver;
     
-    private By firstProduct = By.cssSelector(".product-list .item:first-child");
-    private By addToCartBtn = By.id("add-to-cart");
+    // Locators for demowebshop.tricentis.com
+    private By firstProduct = By.cssSelector(".product-item .product-title a");
+    private By addToCartBtn = By.cssSelector("input.add-to-cart-button");
 
     public ProductPage(WebDriver driver) {
         this.driver = driver;

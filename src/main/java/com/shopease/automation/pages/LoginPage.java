@@ -12,11 +12,11 @@ public class LoginPage {
     private WebDriver driver;
     private WebDriverWait wait;
 
-    // Locators
-    private By usernameField = By.id("username");
-    private By passwordField = By.id("password");
-    private By loginBtn = By.id("login-btn");
-    private By dashboardHeader = By.id("dashboard-header");
+    // Locators for demowebshop.tricentis.com
+    private By usernameField = By.id("Email");
+    private By passwordField = By.id("Password");
+    private By loginBtn = By.cssSelector("input.login-button");
+    private By dashboardHeader = By.cssSelector("a.account"); // Element that shows logged-in user email
 
     public LoginPage(WebDriver driver) {
         this.driver = driver;

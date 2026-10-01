@@ -9,7 +9,8 @@ import java.util.List;
 public class CartPage {
     private WebDriver driver;
     
-    private By cartItems = By.className("cart-item-title");
+    // Locators for demowebshop.tricentis.com
+    private By cartItems = By.cssSelector(".cart-item-row .product a");
 
     public CartPage(WebDriver driver) {
         this.driver = driver;

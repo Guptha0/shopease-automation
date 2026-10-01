@@ -12,7 +12,7 @@ public class ProductSearchCartTests extends BaseTest {
     @Test(description = "Verify searching for a product and adding it to the cart")
     public void verifySearchAndAddToCart() {
         HomePage homePage = new HomePage(getDriver());
-        String searchItem = "Wireless Headphones";
+        String searchItem = "Laptop"; // Changed from Wireless Headphones to Laptop for Tricentis
         
         homePage.searchForProduct(searchItem);
         
